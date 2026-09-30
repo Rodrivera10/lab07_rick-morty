@@ -1,4 +1,4 @@
-package com.rodrigorivera.lab07_moviles
+package com.rodrigorivera.lab07_moviles.characters
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
