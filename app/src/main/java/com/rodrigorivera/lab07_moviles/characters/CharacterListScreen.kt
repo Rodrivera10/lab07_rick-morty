@@ -1,4 +1,4 @@
-package com.rodrigorivera.lab07_moviles
+package com.rodrigorivera.lab07_moviles.characters
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -77,7 +77,4 @@ fun CharacterItem(character: Character, onClick: () -> Unit) {
             )
         }
     }
-}
-
-class CharacterListScreen {
 }

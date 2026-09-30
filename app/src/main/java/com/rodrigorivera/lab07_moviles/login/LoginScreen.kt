@@ -1,4 +1,4 @@
-package com.rodrigorivera.lab07_moviles
+package com.rodrigorivera.lab07_moviles.login
 
 
     import androidx.compose.foundation.layout.*
@@ -7,16 +7,16 @@ package com.rodrigorivera.lab07_moviles
     import androidx.compose.runtime.Composable
     import androidx.compose.ui.Alignment
     import androidx.compose.ui.Modifier
-    import androidx.compose.ui.text.font.FontWeight
     import androidx.compose.ui.unit.dp
     import androidx.compose.ui.unit.sp
     import androidx.compose.foundation.Image
 
 
     import androidx.compose.ui.res.painterResource
+    import com.rodrigorivera.lab07_moviles.R
 
 
-    @Composable
+@Composable
     fun LoginScreen(onNavigateToCharacters: () -> Unit) {
         Column(
             modifier = Modifier
