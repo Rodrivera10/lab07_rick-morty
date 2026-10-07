@@ -15,10 +15,8 @@ fun NavGraphBuilder.charactersNavGraph(navController: NavController) {
                 onCharacterClick = { id -> navController.navigate(CharacterDetailRoute(id)) }
             )
         }
-        composable<CharacterDetailRoute> { backStackEntry ->
-            val args = backStackEntry.toRoute<CharacterDetailRoute>()
+        composable<CharacterDetailRoute> {
             CharacterDetailScreen(
-                characterId = args.id,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

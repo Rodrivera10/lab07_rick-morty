@@ -11,11 +11,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodrigorivera.lab07_moviles.characters.DetailRow
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rodrigorivera.lab07_moviles.components.ErrorLayout
+import com.rodrigorivera.lab07_moviles.components.LoadingLayout
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationDetailScreen(locationId: Int, onNavigateBack: () -> Unit) {
-    val location = LocationDb().getLocationById(locationId)
+fun LocationDetailScreen(
+    onNavigateBack: () -> Unit,
+    viewModel: LocationDetailViewModel = viewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -34,16 +42,28 @@ fun LocationDetailScreen(locationId: Int, onNavigateBack: () -> Unit) {
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(Modifier.height(16.dp))
-            Text(text = location.name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(24.dp))
-            DetailRow(label = "ID:", value = location.id.toString())
-            DetailRow(label = "Type:", value = location.type)
-            DetailRow(label = "Dimensions:", value = location.dimension)
+        val location = state.data
+        when {
+            state.isLoading -> LoadingLayout(
+                onClick = viewModel::onLoadingClick,
+                modifier = Modifier.padding(padding)
+            )
+            state.hasError || location == null -> ErrorLayout(
+                message = "Error al obtener el perfil de la ubicación. Intenta de nuevo",
+                onRetry = viewModel::loadLocation,
+                modifier = Modifier.padding(padding)
+            )
+            else -> Column(
+                modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(16.dp))
+                Text(text = location.name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(24.dp))
+                DetailRow(label = "ID:", value = location.id.toString())
+                DetailRow(label = "Type:", value = location.type)
+                DetailRow(label = "Dimensions:", value = location.dimension)
+            }
         }
     }
 }
