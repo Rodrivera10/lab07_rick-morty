@@ -14,11 +14,19 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.rodrigorivera.lab07_moviles.data.Character
 import com.rodrigorivera.lab07_moviles.data.CharacterDb
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rodrigorivera.lab07_moviles.components.ErrorLayout
+import com.rodrigorivera.lab07_moviles.components.LoadingLayout
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CharacterListScreen(onCharacterClick: (Int) -> Unit) {
-    val characters = CharacterDb().getAllCharacters()
+fun CharacterListScreen(
+    onCharacterClick: (Int) -> Unit,
+    viewModel: CharacterListViewModel = viewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -27,20 +35,31 @@ fun CharacterListScreen(onCharacterClick: (Int) -> Unit) {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
-            )
+                )
             )
         }
-    ){ padding ->
-        LazyColumn(
-            contentPadding = padding,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(characters) { character ->
-                CharacterItem(
-                    character = character,
-                    onClick = { onCharacterClick(character.id) }
-                )
-                HorizontalDivider()
+    ) { padding ->
+        when {
+            state.isLoading -> LoadingLayout(
+                onClick = viewModel::onLoadingClick,
+                modifier = Modifier.padding(padding)
+            )
+            state.hasError -> ErrorLayout(
+                message = "Error al obtener listado de personajes. Intenta de nuevo",
+                onRetry = viewModel::loadCharacters,
+                modifier = Modifier.padding(padding)
+            )
+            else -> LazyColumn(
+                contentPadding = padding,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(state.data) { character ->
+                    CharacterItem(
+                        character = character,
+                        onClick = { onCharacterClick(character.id) }
+                    )
+                    HorizontalDivider()
+                }
             }
         }
     }

@@ -15,10 +15,8 @@ fun NavGraphBuilder.locationsNavGraph(navController: NavController) {
                 onLocationClick = { id -> navController.navigate(LocationDetailRoute(id)) }
             )
         }
-        composable<LocationDetailRoute> { backStackEntry ->
-            val args = backStackEntry.toRoute<LocationDetailRoute>()
+        composable<LocationDetailRoute> {
             LocationDetailScreen(
-                locationId = args.id,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

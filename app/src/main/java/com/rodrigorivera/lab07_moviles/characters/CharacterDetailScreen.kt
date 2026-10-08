@@ -14,14 +14,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.rodrigorivera.lab07_moviles.data.CharacterDb
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.rodrigorivera.lab07_moviles.components.ErrorLayout
+import com.rodrigorivera.lab07_moviles.components.LoadingLayout
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CharacterDetailScreen(
-    characterId: Int,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: CharacterDetailViewModel = viewModel()
 ) {
-    val character = CharacterDb().getCharacterById(characterId)
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -43,36 +48,43 @@ fun CharacterDetailScreen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            AsyncImage(
-                model = character.image,
-                contentDescription = character.name,
+        val character = state.data
+        when {
+            state.isLoading -> LoadingLayout(
+                onClick = viewModel::onLoadingClick,
+                modifier = Modifier.padding(padding)
+            )
+            state.hasError || character == null -> ErrorLayout(
+                message = "Error al obtener el perfil del personaje. Intenta de nuevo",
+                onRetry = viewModel::loadCharacter,
+                modifier = Modifier.padding(padding)
+            )
+            else -> Column(
                 modifier = Modifier
-                    .size(200.dp)
-                    .clip(CircleShape)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = character.name,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            DetailRow(label = "Species:", value = character.species)
-            DetailRow(label = "Status:", value = character.status)
-            DetailRow(label = "Gender:", value = character.gender)
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                AsyncImage(
+                    model = character.image,
+                    contentDescription = character.name,
+                    modifier = Modifier
+                        .size(200.dp)
+                        .clip(CircleShape)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = character.name,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                DetailRow(label = "Species:", value = character.species)
+                DetailRow(label = "Status:", value = character.status)
+                DetailRow(label = "Gender:", value = character.gender)
+            }
         }
     }
 }
