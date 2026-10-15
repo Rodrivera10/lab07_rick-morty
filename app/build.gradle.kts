@@ -74,6 +74,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.material.icons.extended)
 
+    //Lab10
+    implementation(libs.androidx.datastore.preferences)
+
 
 
 }
