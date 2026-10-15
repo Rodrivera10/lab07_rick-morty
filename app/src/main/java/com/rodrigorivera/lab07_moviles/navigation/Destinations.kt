@@ -13,3 +13,6 @@ import kotlinx.serialization.Serializable
 @Serializable data class LocationDetailRoute(val id: Int)
 
 @Serializable object ProfileRoute
+
+// Dirección de la pantalla intermedia
+@Serializable object SplashRoute

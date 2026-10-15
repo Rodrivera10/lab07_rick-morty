@@ -18,13 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.rodrigorivera.lab07_moviles.login.LoginScreen
 import com.rodrigorivera.lab07_moviles.profile.ProfileScreen
+import com.rodrigorivera.lab07_moviles.splash.SplashScreen
 
 private data class BottomItem(val label: String, val route: Any, val icon: ImageVector)
 
@@ -55,7 +55,8 @@ fun AppNavHost() {
                                 ?.any { it.hasRoute(item.route::class) } == true,
                             onClick = {
                                 navController.navigate(item.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
+                                    // Los tabs ahora vuelven a Characters, que es la "base" tras iniciar sesión
+                                    popUpTo<CharactersGraphRoute> {
                                         saveState = true
                                     }
                                     launchSingleTop = true
@@ -72,11 +73,27 @@ fun AppNavHost() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = LoginRoute,
+            startDestination = SplashRoute,
             modifier = Modifier
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding)
         ) {
+            composable<SplashRoute> {
+                SplashScreen(
+                    // Hay sesión: ir a personajes y sacar Splash del historial
+                    onLoggedIn = {
+                        navController.navigate(CharactersGraphRoute) {
+                            popUpTo<SplashRoute> { inclusive = true }
+                        }
+                    },
+                    // No hay sesión: ir al login y sacar Splash del historial
+                    onLoggedOut = {
+                        navController.navigate(LoginRoute) {
+                            popUpTo<SplashRoute> { inclusive = true }
+                        }
+                    }
+                )
+            }
             composable<LoginRoute> {
                 LoginScreen(
                     onNavigateToCharacters = {
