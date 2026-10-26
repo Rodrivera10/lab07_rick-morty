@@ -21,11 +21,11 @@ fun SplashScreen(
     // Se ejecuta una sola vez al entrar a la pantalla
     LaunchedEffect(Unit) {
         // first() lee el valor guardado una vez y termina
-        val name = UserPreferences(context.applicationContext).name.first()
-        if (name.isNullOrBlank()) onLoggedOut() else onLoggedIn()
+        val ready = com.rodrigorivera.lab07_moviles.data.AppContainer.get(context).session.isReady()
+        if (ready) onLoggedIn() else onLoggedOut()
     }
 
-    // Mientras decide, muestra un circulito (dura una fracción de segundo)
+    // Mientras decide, muestra un circulito (dura una fracciÃ³n de segundo)
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
     }

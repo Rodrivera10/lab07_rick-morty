@@ -3,6 +3,8 @@ package com.rodrigorivera.lab07_moviles.characters
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -13,7 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.rodrigorivera.lab07_moviles.data.CharacterDb
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,6 +39,14 @@ fun CharacterDetailScreen(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"
                         )
+                    }
+                },
+                actions = {
+                    state.data?.let { character ->
+                        IconButton(onClick = { viewModel.toggleFavorite(character.id) }) {
+                            Icon(if (character.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = if (character.isFavorite) "Quitar favorito" else "Agregar favorito")
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
