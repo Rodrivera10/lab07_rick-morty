@@ -33,5 +33,6 @@ class LocationDetailViewModel(application: Application, savedStateHandle: SavedS
     fun onLoadingClick() {
         if (_state.value.isLoading) { loadJob?.cancel(); _state.value = _state.value.copy(isLoading = false, hasError = true) }
     }
+    fun toggleFavorite(id: Int) { viewModelScope.launch { repository.toggleFavorite(id) } }
 
 }

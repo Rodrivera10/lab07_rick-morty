@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.*
 data class LocationListState(
     val isLoading: Boolean = true,
     val data: List<Location> = emptyList(),
-    val hasError: Boolean = false
+    val hasError: Boolean = false,
+    val filter: LocationFilter = LocationFilter.ALL
 )
+enum class LocationFilter { ALL, FAVORITES, NOT_FAVORITES }
 
 
 class LocationListViewModel(application: Application) : AndroidViewModel(application) {
@@ -33,5 +35,7 @@ class LocationListViewModel(application: Application) : AndroidViewModel(applica
     fun onLoadingClick() {
         if (_state.value.isLoading) { loadJob?.cancel(); _state.value = _state.value.copy(isLoading = false, hasError = true) }
     }
+    fun setFilter(filter: LocationFilter) { _state.value = _state.value.copy(filter = filter) }
+    fun toggleFavorite(id: Int) { viewModelScope.launch { repository.toggleFavorite(id) } }
 
 }

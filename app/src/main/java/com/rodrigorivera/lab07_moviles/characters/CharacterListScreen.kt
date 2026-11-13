@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.rodrigorivera.lab07_moviles.data.Character
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rodrigorivera.lab07_moviles.components.ErrorLayout
@@ -31,6 +33,7 @@ fun CharacterListScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     val visible = state.data.filter { !state.favoritesOnly || it.isFavorite }
+    var showCreate by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -41,7 +44,8 @@ fun CharacterListScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        }
+        },
+        floatingActionButton = { FloatingActionButton(onClick = { showCreate = true }) { Icon(Icons.Default.Add, contentDescription = "Crear personaje") } }
     ) { padding ->
         when {
             state.isLoading -> LoadingLayout(
@@ -69,9 +73,13 @@ fun CharacterListScreen(
                     HorizontalDivider()
                 }
             }
-        }
-
     }
+    if (showCreate) CharacterEditorDialog(onDismiss = { showCreate = false }, onSave = {
+        viewModel.create(it)
+        showCreate = false
+    })
+
+}
 }
 
 @Composable

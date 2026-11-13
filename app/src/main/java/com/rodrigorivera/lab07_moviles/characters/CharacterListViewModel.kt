@@ -39,6 +39,7 @@ class CharacterListViewModel(application: Application) : AndroidViewModel(applic
         try { repository.toggleFavorite(id) } catch (e: CancellationException) { throw e }
         catch (e: Exception) { _state.value = _state.value.copy(hasError = true) }
     } }
+    fun create(character: Character) { viewModelScope.launch { repository.create(character) } }
     fun toggleFilter() { _state.value = _state.value.copy(favoritesOnly = !_state.value.favoritesOnly) }
 
 }

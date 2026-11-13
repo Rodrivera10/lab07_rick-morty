@@ -38,5 +38,7 @@ class CharacterDetailViewModel(application: Application, savedStateHandle: Saved
         try { repository.toggleFavorite(id) } catch (e: CancellationException) { throw e }
         catch (e: Exception) { _state.value = _state.value.copy(hasError = true) }
     } }
+    fun save(character: Character) { viewModelScope.launch { repository.save(character) } }
+    fun delete(id: Int, onDeleted: () -> Unit) { viewModelScope.launch { repository.delete(id); onDeleted() } }
 
 }
