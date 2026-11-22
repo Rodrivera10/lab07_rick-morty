@@ -79,7 +79,12 @@ class AppContainer private constructor(context: Context) {
         .addMigrations(MIGRATION_1_2).build()
     val characters = CharacterRepository(database)
     val locations = LocationRepository(database)
-    val session = SessionRepository(database, UserPreferences(context), api = RickMortyApi())
+    val session = SessionRepository(
+        database,
+        UserPreferences(context),
+        synchronizationDelay = { delay(4_000) },
+        api = RickMortyApi()
+    )
     companion object {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
