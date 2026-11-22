@@ -55,7 +55,7 @@ fun AppNavHost() {
                                 ?.any { it.hasRoute(item.route::class) } == true,
                             onClick = {
                                 navController.navigate(item.route) {
-                                    // Los tabs ahora vuelven a Characters, que es la "base" tras iniciar sesión
+                                    // Los tabs ahora vuelven a Characters, que es la "base" tras iniciar sesiÃ³n
                                     popUpTo<CharactersGraphRoute> {
                                         saveState = true
                                     }
@@ -80,13 +80,13 @@ fun AppNavHost() {
         ) {
             composable<SplashRoute> {
                 SplashScreen(
-                    // Hay sesión: ir a personajes y sacar Splash del historial
+                    // Hay sesiÃ³n: ir a personajes y sacar Splash del historial
                     onLoggedIn = {
                         navController.navigate(CharactersGraphRoute) {
                             popUpTo<SplashRoute> { inclusive = true }
                         }
                     },
-                    // No hay sesión: ir al login y sacar Splash del historial
+                    // No hay sesiÃ³n: ir al login y sacar Splash del historial
                     onLoggedOut = {
                         navController.navigate(LoginRoute) {
                             popUpTo<SplashRoute> { inclusive = true }
@@ -108,6 +108,9 @@ fun AppNavHost() {
             composable<ProfileRoute> {
                 ProfileScreen(
                     onLogout = {
+                        navController.clearBackStack<CharactersGraphRoute>()
+                        navController.clearBackStack<LocationsGraphRoute>()
+                        navController.clearBackStack<ProfileRoute>()
                         navController.navigate(LoginRoute) {
                             popUpTo(navController.graph.id) { inclusive = true }
                         }

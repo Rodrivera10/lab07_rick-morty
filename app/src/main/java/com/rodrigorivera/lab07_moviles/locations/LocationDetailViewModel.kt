@@ -1,54 +1,38 @@
 package com.rodrigorivera.lab07_moviles.locations
-
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import android.app.Application
+import androidx.lifecycle.*
 import androidx.navigation.toRoute
-import com.rodrigorivera.lab07_moviles.navigation.LocationDetailRoute
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-
+import com.rodrigorivera.lab07_moviles.data.AppContainer
+import com.rodrigorivera.lab07_moviles.data.Character
+import com.rodrigorivera.lab07_moviles.navigation.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 data class LocationDetailState(
     val isLoading: Boolean = true,
     val data: Location? = null,
     val hasError: Boolean = false
 )
 
-class LocationDetailViewModel(
-    savedStateHandle: SavedStateHandle
-) : ViewModel() {
 
-    private val locationId: Int = savedStateHandle.toRoute<LocationDetailRoute>().id
-
+class LocationDetailViewModel(application: Application, savedStateHandle: SavedStateHandle) : AndroidViewModel(application) {
+    private val repository = AppContainer.get(application).locations
     private val _state = MutableStateFlow(LocationDetailState())
-    val state: StateFlow<LocationDetailState> = _state.asStateFlow()
-
+    val state = _state.asStateFlow()
     private var loadJob: Job? = null
-
-    init {
-        loadLocation()
-    }
-
+    private val source = repository.observeById(savedStateHandle.toRoute<LocationDetailRoute>().id)
+    init { loadLocation() }
     fun loadLocation() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            _state.value = LocationDetailState(isLoading = true)
-            delay(2000)
-            _state.value = LocationDetailState(
-                isLoading = false,
-                data = LocationDb().getLocationById(locationId)
-            )
+            _state.value = _state.value.copy(isLoading = true, hasError = false)
+            source
+                .catch { _state.value = _state.value.copy(isLoading = false, hasError = true) }
+                .collect { _state.value = _state.value.copy(isLoading = false, data = it, hasError = it == null) }
         }
     }
-
     fun onLoadingClick() {
-        if (_state.value.isLoading) {
-            loadJob?.cancel()
-            _state.value = LocationDetailState(isLoading = false, hasError = true)
-        }
+        if (_state.value.isLoading) { loadJob?.cancel(); _state.value = _state.value.copy(isLoading = false, hasError = true) }
     }
+    fun toggleFavorite(id: Int) { viewModelScope.launch { repository.toggleFavorite(id) } }
+
 }

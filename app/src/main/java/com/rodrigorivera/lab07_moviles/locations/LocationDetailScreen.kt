@@ -3,6 +3,8 @@ package com.rodrigorivera.lab07_moviles.locations
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,6 +34,14 @@ fun LocationDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    state.data?.let { location ->
+                        IconButton(onClick = { viewModel.toggleFavorite(location.id) }) {
+                            Icon(if (location.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = if (location.isFavorite) "Quitar de favoritas" else "Agregar a favoritas")
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

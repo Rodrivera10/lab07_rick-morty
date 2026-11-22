@@ -2,6 +2,7 @@ package com.rodrigorivera.lab07_moviles.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -15,6 +16,10 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class UserPreferences(private val context: Context) {
 
     // La "llave" con la que guardamos y buscamos el nombre
+    private val syncKey = booleanPreferencesKey("synchronized")
+    val synchronized: Flow<Boolean> = context.dataStore.data.map { it[syncKey] ?: false }
+    suspend fun setSynchronized(value: Boolean) { context.dataStore.edit { it[syncKey] = value } }
+
     private val nameKey = stringPreferencesKey("name")
 
     // Flujo que entrega el nombre guardado (o null si no existe, o sea, no hay sesión)
@@ -27,6 +32,6 @@ class UserPreferences(private val context: Context) {
 
     // Borra el nombre (equivale a "cerrar sesión")
     suspend fun clearName() {
-        context.dataStore.edit { prefs -> prefs.remove(nameKey) }
+        context.dataStore.edit { prefs -> prefs.remove(nameKey); prefs.remove(syncKey) }
     }
 }

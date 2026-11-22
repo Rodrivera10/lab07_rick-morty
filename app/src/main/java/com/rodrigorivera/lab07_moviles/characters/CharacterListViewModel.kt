@@ -1,50 +1,45 @@
 package com.rodrigorivera.lab07_moviles.characters
-
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import android.app.Application
+import androidx.lifecycle.*
+import androidx.navigation.toRoute
+import com.rodrigorivera.lab07_moviles.data.AppContainer
 import com.rodrigorivera.lab07_moviles.data.Character
-import com.rodrigorivera.lab07_moviles.data.CharacterDb
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-
+import com.rodrigorivera.lab07_moviles.navigation.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 data class CharacterListState(
     val isLoading: Boolean = true,
     val data: List<Character> = emptyList(),
-    val hasError: Boolean = false
+    val hasError: Boolean = false,
+    val favoritesOnly: Boolean = false
 )
 
-class CharacterListViewModel : ViewModel() {
 
+class CharacterListViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = AppContainer.get(application).characters
     private val _state = MutableStateFlow(CharacterListState())
-    val state: StateFlow<CharacterListState> = _state.asStateFlow()
-
+    val state = _state.asStateFlow()
     private var loadJob: Job? = null
 
-    init {
-        loadCharacters()
-    }
-
+    init { loadCharacters() }
     fun loadCharacters() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            _state.value = CharacterListState(isLoading = true)
-            delay(4000) // simula la llamada a internet
-            _state.value = CharacterListState(
-                isLoading = false,
-                data = CharacterDb().getAllCharacters()
-            )
+            _state.value = _state.value.copy(isLoading = true, hasError = false)
+            repository.observeAll()
+                .catch { _state.value = _state.value.copy(isLoading = false, hasError = true) }
+                .collect { _state.value = _state.value.copy(isLoading = false, data = it, hasError = false) }
         }
+    }
+    fun onLoadingClick() {
+        if (_state.value.isLoading) { loadJob?.cancel(); _state.value = _state.value.copy(isLoading = false, hasError = true) }
     }
 
-    // Se llama cuando el usuario toca el layout de Loading
-    fun onLoadingClick() {
-        if (_state.value.isLoading) {
-            loadJob?.cancel() // evita que los datos lleguen después del error
-            _state.value = CharacterListState(isLoading = false, hasError = true)
-        }
-    }
+    fun toggleFavorite(id: Int) { viewModelScope.launch {
+        try { repository.toggleFavorite(id) } catch (e: CancellationException) { throw e }
+        catch (e: Exception) { _state.value = _state.value.copy(hasError = true) }
+    } }
+    fun create(character: Character) { viewModelScope.launch { repository.create(character) } }
+    fun toggleFilter() { _state.value = _state.value.copy(favoritesOnly = !_state.value.favoritesOnly) }
+
 }

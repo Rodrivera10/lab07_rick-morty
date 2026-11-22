@@ -1,56 +1,44 @@
 package com.rodrigorivera.lab07_moviles.characters
-
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import android.app.Application
+import androidx.lifecycle.*
 import androidx.navigation.toRoute
+import com.rodrigorivera.lab07_moviles.data.AppContainer
 import com.rodrigorivera.lab07_moviles.data.Character
-import com.rodrigorivera.lab07_moviles.data.CharacterDb
-import com.rodrigorivera.lab07_moviles.navigation.CharacterDetailRoute
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-
+import com.rodrigorivera.lab07_moviles.navigation.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 data class CharacterDetailState(
     val isLoading: Boolean = true,
     val data: Character? = null,
     val hasError: Boolean = false
 )
 
-class CharacterDetailViewModel(
-    savedStateHandle: SavedStateHandle
-) : ViewModel() {
 
-    private val characterId: Int = savedStateHandle.toRoute<CharacterDetailRoute>().id
-
+class CharacterDetailViewModel(application: Application, savedStateHandle: SavedStateHandle) : AndroidViewModel(application) {
+    private val repository = AppContainer.get(application).characters
     private val _state = MutableStateFlow(CharacterDetailState())
-    val state: StateFlow<CharacterDetailState> = _state.asStateFlow()
-
+    val state = _state.asStateFlow()
     private var loadJob: Job? = null
-
-    init {
-        loadCharacter()
-    }
-
+    private val source = repository.observeById(savedStateHandle.toRoute<CharacterDetailRoute>().id)
+    init { loadCharacter() }
     fun loadCharacter() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            _state.value = CharacterDetailState(isLoading = true)
-            delay(2000) // 2 segundos para el perfil
-            _state.value = CharacterDetailState(
-                isLoading = false,
-                data = CharacterDb().getCharacterById(characterId)
-            )
+            _state.value = _state.value.copy(isLoading = true, hasError = false)
+            source
+                .catch { _state.value = _state.value.copy(isLoading = false, hasError = true) }
+                .collect { _state.value = _state.value.copy(isLoading = false, data = it, hasError = it == null) }
         }
+    }
+    fun onLoadingClick() {
+        if (_state.value.isLoading) { loadJob?.cancel(); _state.value = _state.value.copy(isLoading = false, hasError = true) }
     }
 
-    fun onLoadingClick() {
-        if (_state.value.isLoading) {
-            loadJob?.cancel()
-            _state.value = CharacterDetailState(isLoading = false, hasError = true)
-        }
-    }
+    fun toggleFavorite(id: Int) { viewModelScope.launch {
+        try { repository.toggleFavorite(id) } catch (e: CancellationException) { throw e }
+        catch (e: Exception) { _state.value = _state.value.copy(hasError = true) }
+    } }
+    fun save(character: Character) { viewModelScope.launch { repository.save(character) } }
+    fun delete(id: Int, onDeleted: () -> Unit) { viewModelScope.launch { repository.delete(id); onDeleted() } }
+
 }

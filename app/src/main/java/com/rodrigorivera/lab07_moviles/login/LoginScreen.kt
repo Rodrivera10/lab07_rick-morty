@@ -16,27 +16,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodrigorivera.lab07_moviles.R
-import com.rodrigorivera.lab07_moviles.data.UserPreferences
-import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.CircularProgressIndicator
 
 @Composable
-fun LoginScreen(onNavigateToCharacters: () -> Unit) {
+fun LoginScreen(onNavigateToCharacters: () -> Unit, viewModel: SessionViewModel = viewModel()) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    LaunchedEffect(state.completed) { if (state.completed) onNavigateToCharacters() }
     // Lo que el usuario escribe en el campo de nombre
     var name by remember { mutableStateOf("") }
 
     // Herramientas para lanzar corutinas y acceder a DataStore
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val prefs = remember { UserPreferences(context.applicationContext) }
 
     Column(
         modifier = Modifier
@@ -45,7 +44,7 @@ fun LoginScreen(onNavigateToCharacters: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Bloque central: logo + campo + botón
+        // Bloque central: logo + campo + botÃƒÂ³n
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.height(60.dp))
 
@@ -71,18 +70,17 @@ fun LoginScreen(onNavigateToCharacters: () -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Guarda el nombre y luego navega; deshabilitado si el campo está vacío
+            if (state.loading) { CircularProgressIndicator(); Text("Sincronizando datos...") }
+            state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            // Guarda el nombre y luego navega; deshabilitado si el campo estÃƒÂ¡ vacÃƒÂ­o
             Button(
                 onClick = {
-                    scope.launch {
-                        prefs.saveName(name.trim())
-                        onNavigateToCharacters()
-                    }
+                    viewModel.login(name.trim())
                 },
-                enabled = name.isNotBlank(),
+                enabled = name.isNotBlank() && !state.loading,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Entrar", fontSize = 18.sp)
+                Text(text = "Iniciar sesión", fontSize = 18.sp)
             }
         }
 

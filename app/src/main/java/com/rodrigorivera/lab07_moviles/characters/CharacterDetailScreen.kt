@@ -3,7 +3,11 @@ package com.rodrigorivera.lab07_moviles.characters
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -13,8 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.rodrigorivera.lab07_moviles.data.CharacterDb
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rodrigorivera.lab07_moviles.components.ErrorLayout
@@ -27,6 +31,8 @@ fun CharacterDetailScreen(
     viewModel: CharacterDetailViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var showEditor by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var showDelete by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -38,6 +44,16 @@ fun CharacterDetailScreen(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"
                         )
+                    }
+                },
+                actions = {
+                    state.data?.let { character ->
+                        IconButton(onClick = { showEditor = true }) { Icon(Icons.Default.Edit, contentDescription = "Editar") }
+                        IconButton(onClick = { showDelete = true }) { Icon(Icons.Default.Delete, contentDescription = "Eliminar") }
+                        IconButton(onClick = { viewModel.toggleFavorite(character.id) }) {
+                            Icon(if (character.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = if (character.isFavorite) "Quitar favorito" else "Agregar favorito")
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -86,6 +102,19 @@ fun CharacterDetailScreen(
                 DetailRow(label = "Gender:", value = character.gender)
             }
         }
+    }
+    state.data?.let { character ->
+        if (showEditor) CharacterEditorDialog(initial = character, onDismiss = { showEditor = false }, onSave = {
+            viewModel.save(it)
+            showEditor = false
+        })
+        if (showDelete) AlertDialog(
+            onDismissRequest = { showDelete = false },
+            title = { Text("Eliminar personaje") },
+            text = { Text("¿Deseas eliminar a ${character.name}? Esta acción es local.") },
+            confirmButton = { TextButton(onClick = { viewModel.delete(character.id, onNavigateBack); showDelete = false }) { Text("Eliminar") } },
+            dismissButton = { TextButton(onClick = { showDelete = false }) { Text("Cancelar") } }
+        )
     }
 }
 
